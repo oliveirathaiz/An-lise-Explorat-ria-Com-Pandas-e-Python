@@ -1,0 +1,118 @@
+#Importando as bibliotecas
+import pandas as pd 
+import matplotlib.pyplot as plt
+plt.style.use("seaborn")
+
+#upload do arquivo
+from google.colab import files
+arq = files.upload()
+
+
+#criando nosso Dataframe
+df=pd.read_excel("Adventure-Works-Sales2.xlsx")
+
+#visualizando as 5 primeiras linhas
+df.head()
+
+
+#Quantidade de Linhas e Colunas
+df.shape
+
+
+#Verificando tipos de dados
+df.dtypes
+
+#Qual a Receita total?
+round(df["Vendas"].sum(),2)
+
+#Qual o Custo total?
+df["Total Cost"] = df['Quantidade'] .mul(df['Custo Unitário']) #criação coluna de custos totais
+
+df.head(1)
+
+#soma do custo  total
+round(df["Total Cost"].sum(),2)
+
+#Agora que temos a receita total e custo total,  podemos calcular o lucro total, fazendo a receita -  o custo
+df["Lucro"] = df["Vendas"] - df['Total Cost']
+
+
+df.head(1)
+
+#Vizualizando o lucro total
+round(df["Lucro"].sum(),2)
+
+#Encontrar tempo total de envio
+#criar uma coluna com total de dias desde a venda até o envio
+df["Tempo_de_Envio"] = (df["ShipDate"] - df["OrderDate"]).dt.days
+df.head(1)
+
+#verificando se o dado deixou de ser string, e passou a ser inteiro
+df['Tempo_de_Envio'].dtype
+
+#Calcular a média de tempo gasto no envio por modelo
+df.groupby("Produto")["Tempo_de_Envio"].mean()
+
+#Verificar se há Valores faltantes
+df.isnull().sum()
+
+#agrupando por Ano e marca
+df.groupby([df["ShipDate"].dt.year,"Produto"])["Lucro"] .sum()
+
+#Para corrigir a vizualização do número e não aparecer como notação cientifica, ou ser melhor visualmente
+pd.options.display.float_format = '{:20,.2f}'.format
+
+#qual o total de produtos vendidos?
+df.groupby("Produto")["Quantidade"].sum().sort_values(ascending=False)
+
+#Criar um gráfico com a informação do total de produtos vendidos
+df.groupby("Produto")["Quantidade"].sum().sort_values(ascending=True).plot.barh("Total Vendido")
+plt.xlabel("Total")
+plt.ylabel("Produto");
+
+#Calcular o lucro por ano
+df.groupby(df["OrderDate"].dt.year)["Lucro"].sum().plot.bar(title ="Lucro x Ano")
+plt.xlabel("Ano")
+plt.ylabel("Receita")
+
+#calcular o lucro conforme cada ano
+df.groupby(df["OrderDate"].dt.year)["Lucro"].sum()
+
+#Selecionandoapenas vendas de 2011
+df_2011=df[df["OrderDate"].dt.year==2011]
+
+df_2011.head()
+
+#usando gráfico de linhas para vizualizar o lucro mensal
+df_2011.groupby(df_2011["OrderDate"].dt.month)["Lucro"].sum().plot(title="Lucro x Mês")
+plt.xlabel("Mês")
+plt.ylabel("Lucro");
+
+
+#Lucro de cada produto em 2011
+df_2011.groupby("Produto")["Lucro"].sum().plot.bar(title="Lucro x Produto")
+plt.xlabel("Produto")
+plt.ylabel("Lucro")
+plt.xticks(rotation='horizontal');
+
+df.head(1)
+
+
+#Análises Estatísticas
+df['Tempo_de_Envio'].describe()
+
+#Gráficos
+plt.boxplot(df['Tempo_de_Envio']);
+
+#Histograma
+plt.hist(df["Tempo_de_Envio"]);
+
+#Tempo Mínimo de Envio
+df["Tempo_de_Envio"].min()
+
+#Tempo Máximo de envio
+df["Tempo_de_Envio"].max()
+
+#Não há outlier
+#Como salvar a planilha com as novas colunas?
+df.to_csv("df_vendas_novo.csv",index=False)
